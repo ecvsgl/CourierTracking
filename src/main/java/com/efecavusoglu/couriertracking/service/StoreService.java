@@ -1,6 +1,6 @@
 package com.efecavusoglu.couriertracking.service;
 
-import com.efecavusoglu.couriertracking.model.Store;
+import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import java.util.List;
 @Slf4j
 public class StoreService {
 
-    private List<Store> stores;
+    private List<StoreEntity> stores;
     private final ObjectMapper objectMapper;
 
     public StoreService(ObjectMapper objectMapper) {
@@ -31,7 +31,7 @@ public class StoreService {
                 this.stores = Collections.emptyList();
                 return;
             }
-            this.stores = objectMapper.readValue(inputStream, new TypeReference<List<Store>>() {});
+            this.stores = objectMapper.readValue(inputStream, new TypeReference<List<StoreEntity>>() {});
             log.info("Successfully loaded {} stores from stores.json.", (this.stores != null ? this.stores.size() : 0));
         } catch (IOException e) {
             log.error("Failed to load stores from stores.json: {}", e.getMessage(), e);
@@ -39,7 +39,7 @@ public class StoreService {
         }
     }
 
-    public List<Store> getStores() {
+    public List<StoreEntity> getStores() {
         //ensure stores are loaded
         if (stores == null || stores.isEmpty()) {
             loadStores();

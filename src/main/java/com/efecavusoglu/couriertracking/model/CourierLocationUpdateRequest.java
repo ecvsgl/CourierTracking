@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CourierLocation {
+public class CourierLocationUpdateRequest {
     private String courierId;
     private double latitude;
     private double longitude;

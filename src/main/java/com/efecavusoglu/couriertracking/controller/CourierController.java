@@ -1,6 +1,6 @@
 package com.efecavusoglu.couriertracking.controller;
 
-import com.efecavusoglu.couriertracking.model.CourierLocationUpdateRequest;
+import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
 import com.efecavusoglu.couriertracking.service.CourierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

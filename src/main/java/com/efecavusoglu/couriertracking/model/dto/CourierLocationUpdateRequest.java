@@ -1,4 +1,4 @@
-package com.efecavusoglu.couriertracking.model;
+package com.efecavusoglu.couriertracking.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

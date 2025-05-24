@@ -4,8 +4,7 @@ public class DistanceUtil {
     private static final double EARTH_RADIUS_KM = 6371.0;
 
     private DistanceUtil() {
-        // Utility Pattern
-        // constructor is private -- prevent instantiation of the utility class with only static methods
+        // constructor is private -- prevent instantiation of the utility class
     }
 
     /**
@@ -14,7 +13,7 @@ public class DistanceUtil {
      * @param lng1 longitude of the point1
      * @param lat2 latitute of the point2
      * @param lng2 longitude of the point2
-     * @return The distance in meters
+     * @return distance in meters
      */
     public static double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
         double latitude1InRadians = Math.toRadians(lat1);

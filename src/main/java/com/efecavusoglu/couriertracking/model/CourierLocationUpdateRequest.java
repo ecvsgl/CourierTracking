@@ -14,4 +14,10 @@ public class CourierLocationUpdateRequest {
     private double latitude;
     private double longitude;
     private LocalDateTime timestamp;
+
+    public static boolean isValid(CourierLocationUpdateRequest courierLocationUpdateRequest) {
+        return courierLocationUpdateRequest != null
+                && courierLocationUpdateRequest.getCourierId() != null
+                && courierLocationUpdateRequest.getTimestamp() != null;
+    }
 }

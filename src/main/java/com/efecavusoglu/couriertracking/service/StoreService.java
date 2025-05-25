@@ -41,21 +41,21 @@ public class StoreService {
             List<StoreDTO> storesFromJsonFile = objectMapper.readValue(inputStream, new TypeReference<>() {});
 
             for (StoreDTO storeInput : storesFromJsonFile) {
-                Optional<StoreEntity> storeEntity = storeRepository.findByStoreName(storeInput.getStoreName());
+                Optional<StoreEntity> storeEntity = storeRepository.findByStoreName(storeInput.getName());
 
                 // we will use H2DB for ease of demonstration, an in memory db, it will be empty each time
                 // but, if db vendor is changed later on && after app restart the new db did not drop prev values,
                 // we can update the preexisting ones as using stores.json as a "single source of truth".
                 storeEntity.ifPresentOrElse(entity -> {
-                    entity.setLatitude(storeInput.getLatitude());
-                    entity.setLongitude(storeInput.getLongitude());
+                    entity.setLatitude(storeInput.getLat());
+                    entity.setLongitude(storeInput.getLng());
                     storeRepository.save(entity);
                     log.info("Store {} updated successfully", entity.getStoreName());
                 }, () -> {
                     StoreEntity store = StoreEntity.builder()
-                            .storeName(storeInput.getStoreName())
-                            .latitude(storeInput.getLatitude())
-                            .longitude(storeInput.getLongitude())
+                            .storeName(storeInput.getName())
+                            .latitude(storeInput.getLat())
+                            .longitude(storeInput.getLng())
                             .build();
                     storeRepository.save(store);
                     log.info("Store {} persisted successfully", store.getStoreName());

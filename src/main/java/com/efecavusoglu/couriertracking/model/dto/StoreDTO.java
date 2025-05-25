@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StoreDTO {
-    private String storeName;
-    private double latitude;
-    private double longitude;
+    private String name;
+    private double lat;
+    private double lng;
 }

@@ -7,11 +7,9 @@ import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.efecavusoglu.couriertracking.repository.CourierLocationRepository;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
-import com.efecavusoglu.couriertracking.util.DistanceUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;

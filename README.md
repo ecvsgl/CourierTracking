@@ -5,7 +5,7 @@ This project is a Spring Boot application designed to track courier locations an
 ## Prerequisites
 
 *   Java 21 or higher
-*   Apache Maven
+*   Apache Maven 3.xx
 
 ## Setup & Build
 

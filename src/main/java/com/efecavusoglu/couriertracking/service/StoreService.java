@@ -29,9 +29,9 @@ public class StoreService {
     }
 
     @PostConstruct
-    //in future, if this is used even after postConstruct, we need to ensure that cache is wiped off since new data might be inserted
+    //in the future, if this is used even after postConstruct, we'll need to ensure that the cache is wiped off since new data might be inserted
     @CacheEvict(value = "stores", allEntries = true)
-    // method to get all stores from stores.json and persist them in database
+    // method to get all stores from stores.json and persist them in the database
     public void loadAndPersistStores() {
         try (InputStream inputStream = getClass().getResourceAsStream("/stores.json")) {
             if (inputStream == null) {

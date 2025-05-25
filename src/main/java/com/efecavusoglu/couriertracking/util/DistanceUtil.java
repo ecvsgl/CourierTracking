@@ -17,18 +17,17 @@ public class DistanceUtil {
      */
     public static double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
         double latitude1InRadians = Math.toRadians(lat1);
-        double longitude1InRadians = Math.toRadians(lng1);
         double latitude2InRadians = Math.toRadians(lat2);
-        double longitude2InRadians = Math.toRadians(lng2);
 
         double deltaLatitude = latitude2InRadians - latitude1InRadians;
-        double deltaLongitude = longitude2InRadians - longitude1InRadians;
+        double deltaLongitude = Math.toRadians(lng1 - lng2);
 
+        // value naming unimportant here -- just for ease of use
         double a = Math.sin(deltaLatitude / 2) * Math.sin(deltaLatitude / 2) +
                 Math.cos(latitude1InRadians) * Math.cos(latitude2InRadians) * Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
 
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double coefficient = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return EARTH_RADIUS_KM * c * 1000;
+        return EARTH_RADIUS_KM * coefficient * 1000;
     }
 }

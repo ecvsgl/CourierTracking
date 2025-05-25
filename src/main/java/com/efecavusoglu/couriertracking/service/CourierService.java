@@ -3,7 +3,6 @@ package com.efecavusoglu.couriertracking.service;
 import com.efecavusoglu.couriertracking.exception.InsufficientDataException;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
-import com.efecavusoglu.couriertracking.model.dto.CourierStoreEntryResponse;
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
@@ -26,10 +25,10 @@ import static com.efecavusoglu.couriertracking.util.DistanceUtil.calculateDistan
 public class CourierService {
 
     @Value("${couriertracking.store_proximity_radius.meters:100}")
-    private static double STORE_PROXIMITY_RADIUS_METERS;
+    private double STORE_PROXIMITY_RADIUS_METERS;
 
     @Value("${couriertracking.reentry_cooldown.minutes:1}")
-    private static Long REENTRY_COOLDOWN_MINUTES;
+    private Long REENTRY_COOLDOWN_MINUTES;
 
     private final StoreService storeService;
     private final CourierLocationRepository courierLocationRepository;
@@ -190,22 +189,5 @@ public class CourierService {
                 .timestamp(courierLocationEntity.getTimestamp())
                 .isTriggeredStoreEntry(false)
                 .build();
-    }
-
-    public ResponseEntity<List<CourierLocationEntity>> getAllLocations() {
-        return ResponseEntity.ok(courierLocationRepository.findAll());
-    }
-
-    public ResponseEntity<List<CourierStoreEntryResponse>> getAllStoreEntries() {
-        return ResponseEntity.ok(courierStoreEntryRepository.findAll().stream().map(this::mapStoreEntryEntityToResponse).toList());
-    }
-
-    private CourierStoreEntryResponse mapStoreEntryEntityToResponse(CourierStoreEntryEntity entity){
-        return CourierStoreEntryResponse.builder()
-                .storeName(entity.getStore().getStoreName())
-                .courierId(entity.getCourierId())
-                .timestamp(entity.getTimestamp())
-                .build();
-
     }
 }

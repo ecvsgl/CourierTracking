@@ -36,7 +36,7 @@ public class MockDataInitializer implements CommandLineRunner {
     private static final int NUM_COURIERS = 5;
     private static final int LOCATIONS_PER_COURIER = 17;
 
-    // Coordinates to be scatter around Istanbul
+    // Coordinates to be scattered around Istanbul
     private static final double BASE_LAT = 40.993142;
     private static final double BASE_LNG = 29.084008;
     private static final double LAT_LNG_SPREAD = 0.05; // randomness spread
@@ -69,10 +69,10 @@ public class MockDataInitializer implements CommandLineRunner {
             log.info("Generating data for courier: {}", courierId);
 
             for (int j = 0; j < LOCATIONS_PER_COURIER; j++) {
-                twoHoursAgoTime = twoHoursAgoTime.plusMinutes(random.nextInt(5) + 1); // Advance time by 1-5 minutes
+                twoHoursAgoTime = twoHoursAgoTime.plusMinutes(random.nextInt(5) + 1); // Advance time by 1-5 minutes for randomness
                 double latitude, longitude;
 
-                // Every few locations, try to make one near a store if stores exist
+                // Every few locations, try to make one near a store if stores exist, to populate storeEntry table
                 if (j % 4 == 0 && j > 0) { // e.g., 4th, 8th, 12th location
                     StoreEntity targetStore = stores.get(random.nextInt(stores.size()));
                     // Generate coordinates very close to the target store (within ~50m)
@@ -94,7 +94,7 @@ public class MockDataInitializer implements CommandLineRunner {
                         .build();
                 courierLocationRepository.save(location);
 
-                // Check if this location triggers a store entry
+                // Check if this location triggers a store entry, then persist db
                 for (StoreEntity store : stores) {
                     double distance = DistanceUtil.calculateDistance(store.getLatitude(), store.getLongitude(), latitude, longitude);
                     if (distance <= STORE_PROXIMITY_RADIUS_METERS) {

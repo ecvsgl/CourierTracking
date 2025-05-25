@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -40,10 +41,7 @@ public class CourierService {
         this.courierStoreEntryRepository = courierStoreEntryRepository;
     }
 
-    /**
-     * Han
-     * @param courierLocationUpdateRequest
-     */
+    @Transactional
     public ResponseEntity<CourierLocationUpdateResponse> processSingleLocationUpdate(CourierLocationUpdateRequest courierLocationUpdateRequest) {
         //persist location to DB
         CourierLocationEntity courierLocationEntity = courierLocationRepository.save(mapLocationUpdateRequestToLocationEntity(courierLocationUpdateRequest));
@@ -60,6 +58,7 @@ public class CourierService {
         return ResponseEntity.ok(courierLocationUpdateResponse);
     }
 
+    @Transactional
     public ResponseEntity<List<CourierLocationUpdateResponse>> processBatchLocationUpdate(List<CourierLocationUpdateRequest> courierLocationList) {
         if (courierLocationList == null || courierLocationList.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one location update request.");

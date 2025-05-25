@@ -67,6 +67,7 @@ public class StoreService {
         }
     }
 
+    // we use caching to avoid excessive calls to DB, since the stores are read once and will not change again.
     @Cacheable("stores")
     public List<StoreEntity> getStores() {
         return storeRepository.findAll();

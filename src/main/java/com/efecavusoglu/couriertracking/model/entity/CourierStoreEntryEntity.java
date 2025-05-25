@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -25,19 +26,21 @@ public class CourierStoreEntryEntity {
     @JoinColumn(name="store_id", nullable = false)
     private StoreEntity store;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="courier_location_id", nullable = false, unique = true)
-    private CourierLocationEntity courierLocation;
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private double distanceToStore;
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CourierStoreEntryEntity that)) return false;
-        return Objects.equals(id, that.id) && Objects.equals(courierId, that.courierId) && Objects.equals(store, that.store) && Objects.equals(courierLocation, that.courierLocation);
+        return Double.compare(distanceToStore, that.distanceToStore) == 0 && Objects.equals(id, that.id) && Objects.equals(courierId, that.courierId) && Objects.equals(store, that.store) && Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, courierId, store, courierLocation);
+        return Objects.hash(id, courierId, store, timestamp, distanceToStore);
     }
 
     @Override
@@ -46,7 +49,8 @@ public class CourierStoreEntryEntity {
                 "id=" + id +
                 ", courierId='" + courierId + '\'' +
                 ", store=" + store +
-                ", courierLocation=" + courierLocation +
+                ", timestamp=" + timestamp +
+                ", distance=" + distanceToStore +
                 '}';
     }
 
@@ -54,7 +58,8 @@ public class CourierStoreEntryEntity {
     private CourierStoreEntryEntity(Builder builder) {
         this.courierId = builder.courierId;
         this.store = builder.store;
-        this.courierLocation = builder.courierLocation;
+        this.timestamp = builder.timestamp;
+        this.distanceToStore = builder.distanceToStore;
     }
 
     public static Builder builder() {
@@ -64,7 +69,8 @@ public class CourierStoreEntryEntity {
     public static class Builder {
         private String courierId;
         private StoreEntity store;
-        private CourierLocationEntity courierLocation;
+        private LocalDateTime timestamp;
+        private double distanceToStore;
 
         public Builder() {}
 
@@ -78,9 +84,16 @@ public class CourierStoreEntryEntity {
             return this;
         }
 
-        public Builder courierLocation(CourierLocationEntity courierLocation) {
-            this.courierLocation = courierLocation;
+        public Builder timestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
             return this;
         }
+
+        public Builder distanceToStore(double distanceToStore) {
+            this.distanceToStore = distanceToStore;
+            return this;
+        }
+
+
     }
 }

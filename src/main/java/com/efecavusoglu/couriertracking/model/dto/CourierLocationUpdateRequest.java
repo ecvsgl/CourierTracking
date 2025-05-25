@@ -18,6 +18,8 @@ public class CourierLocationUpdateRequest {
     public static boolean isValid(CourierLocationUpdateRequest courierLocationUpdateRequest) {
         return courierLocationUpdateRequest != null
                 && courierLocationUpdateRequest.getCourierId() != null
-                && courierLocationUpdateRequest.getTimestamp() != null;
+                && courierLocationUpdateRequest.getTimestamp() != null
+                && courierLocationUpdateRequest.getLatitude() != 0.0
+                && courierLocationUpdateRequest.getLongitude() != 0.0;
     }
 }

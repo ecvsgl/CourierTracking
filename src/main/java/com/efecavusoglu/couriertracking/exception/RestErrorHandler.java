@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 
 /**
- * RestErrorHandler class handles all exceptions thrown by the application.
+ * RestControllerAdvice class handles all exceptions thrown by the application.
  */
 @RestControllerAdvice
 public class RestErrorHandler {

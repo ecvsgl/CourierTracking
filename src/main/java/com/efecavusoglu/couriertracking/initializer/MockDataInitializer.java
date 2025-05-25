@@ -17,6 +17,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Mock data initializer that populates the database with mock data.
+ * Generates mock data for a fixed number of couriers and stores, and then generates mock locations for each courier.
+ * This will only run at the beginning as it implements CommandLineRunner.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

@@ -16,6 +16,11 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service class for Stores that loads stores from stores.json and persists them in the database.
+ * Access to stores from DB will be made from StoreService also.
+ * Caching is used to improve performance since store data rarely changes.
+ */
 @Service
 @Slf4j
 public class StoreService {

@@ -68,7 +68,7 @@ public class CourierService {
     private Optional<CourierStoreEntryEntity> evaluateIfStoreEntryTriggered(CourierLocationEntity courierLocationEntity) {
         return storeService.getStores()
                 .stream()
-                .filter(store ->isCourierWithinStoreRange(store, courierLocationEntity) && !isCourierEnteredStoreBefore(store, courierLocationEntity))
+                .filter(store -> isCourierWithinStoreRange(store, courierLocationEntity) && !isCourierEnteredStoreBefore(store, courierLocationEntity))
                 .findAny()// because the courier can be within range of one store for 100 meters
                 .map(store -> mapLocationEntityToStoreEntryEntity(store, courierLocationEntity));
     }

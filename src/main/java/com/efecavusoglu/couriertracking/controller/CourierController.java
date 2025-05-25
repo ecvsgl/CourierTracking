@@ -22,11 +22,7 @@ public class CourierController {
      */
     @PostMapping("/location")
     public ResponseEntity<Void> updateCourierLocation(@RequestBody CourierLocationUpdateRequest courierLocation) {
-        if (!CourierLocationUpdateRequest.isValid(courierLocation)) {
-            return ResponseEntity.badRequest().build();
-        }
-        courierService.processLocationUpdate(courierLocation);
-        return ResponseEntity.ok().build();
+        return courierService.processSingleLocationUpdate(courierLocation);
     }
 
     /**
@@ -36,15 +32,7 @@ public class CourierController {
      */
     @PostMapping("/locations")
     public ResponseEntity<Void> updateCourierLocations(@RequestBody List<CourierLocationUpdateRequest> courierLocationList) {
-        if (courierLocationList == null || courierLocationList.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        for (CourierLocationUpdateRequest courierLocation : courierLocationList) {
-            if (!CourierLocationUpdateRequest.isValid(courierLocation)) {
-                courierService.processLocationUpdate(courierLocation);
-            }
-        }
-        return ResponseEntity.ok().build();
+        return courierService.processBatchLocationUpdate(courierLocationList);
     }
 
     /**
@@ -54,14 +42,7 @@ public class CourierController {
      */
     @GetMapping("/{courierId}/distance")
     public ResponseEntity<Double> getTotalTravelDistance(@PathVariable String courierId) {
-        if (courierId == null || courierId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build(); //
-        }
-        Double distance = courierService.getTotalTravelDistance(courierId);
-        if (distance == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(distance);
+        return courierService.getTotalTravelDistance(courierId);
     }
 
 

@@ -2,6 +2,9 @@ package com.efecavusoglu.couriertracking.controller;
 
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
+import com.efecavusoglu.couriertracking.model.dto.CourierStoreEntryResponse;
+import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
+import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.service.CourierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,16 @@ import java.util.List;
 public class CourierController {
 
     private final CourierService courierService;
+
+    @GetMapping("/locations")
+    public ResponseEntity<List<CourierLocationEntity>> getAllLocations(){
+        return courierService.getAllLocations();
+    }
+
+    @GetMapping("/store-entries")
+    public ResponseEntity<List<CourierStoreEntryResponse>> getAllStoreEntries(){
+        return courierService.getAllStoreEntries();
+    }
 
     /**
      * Handles a single courier location update.

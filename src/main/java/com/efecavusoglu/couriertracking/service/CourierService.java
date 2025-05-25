@@ -3,6 +3,7 @@ package com.efecavusoglu.couriertracking.service;
 import com.efecavusoglu.couriertracking.exception.InsufficientDataException;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
+import com.efecavusoglu.couriertracking.model.dto.CourierStoreEntryResponse;
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
@@ -75,7 +76,7 @@ public class CourierService {
         courierLocationEntityList.sort(Comparator.comparing(CourierLocationEntity::getCourierId).thenComparing(CourierLocationEntity::getTimestamp));
 
         // iterate over locationEntity list for:
-        // 1) create corresponding response for each entity,
+        // 1) create a corresponding response for each entity,
         // 2) if such locationUpdateEntity triggers a storeEntry, create storeEntryEntity and add it to the persistence list, then mark response for successful storeEntry
         List<CourierLocationUpdateResponse> responseList = new LinkedList<>();
         List<CourierStoreEntryEntity> storeEntryList = new LinkedList<>();
@@ -189,5 +190,22 @@ public class CourierService {
                 .timestamp(courierLocationEntity.getTimestamp())
                 .isTriggeredStoreEntry(false)
                 .build();
+    }
+
+    public ResponseEntity<List<CourierLocationEntity>> getAllLocations() {
+        return ResponseEntity.ok(courierLocationRepository.findAll());
+    }
+
+    public ResponseEntity<List<CourierStoreEntryResponse>> getAllStoreEntries() {
+        return ResponseEntity.ok(courierStoreEntryRepository.findAll().stream().map(this::mapStoreEntryEntityToResponse).toList());
+    }
+
+    private CourierStoreEntryResponse mapStoreEntryEntityToResponse(CourierStoreEntryEntity entity){
+        return CourierStoreEntryResponse.builder()
+                .storeName(entity.getStore().getStoreName())
+                .courierId(entity.getCourierId())
+                .timestamp(entity.getTimestamp())
+                .build();
+
     }
 }

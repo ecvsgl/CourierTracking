@@ -7,6 +7,8 @@ import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.efecavusoglu.couriertracking.repository.CourierLocationRepository;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +21,11 @@ import static com.efecavusoglu.couriertracking.util.DistanceUtil.calculateDistan
 @Service
 public class CourierService {
 
-    private static final double STORE_PROXIMITY_RADIUS_METERS = 100;
-    private static final long REENTRY_COOLDOWN_MINUTES = 1;
+    @Value("${couriertracking.store_proximity_radius.meters:100}")
+    private static double STORE_PROXIMITY_RADIUS_METERS;
+
+    @Value("${couriertracking.reentry_cooldown.minutes:1}")
+    private static Long REENTRY_COOLDOWN_MINUTES;
 
     private final StoreService storeService;
     private final CourierLocationRepository courierLocationRepository;
@@ -85,8 +90,12 @@ public class CourierService {
 
         List<CourierLocationEntity> courierLocations = courierLocationRepository.findByCourierIdOrderByTimestampAsc(courierId);
 
-        if (courierLocations == null || courierLocations.size() < 2) {
-            throw new InsufficientDataException("Courier ID " + courierId + " has less than 2 locations. Please provide at least 2 locations to calculate distance.");
+        if (courierLocations.isEmpty()){
+            throw new EntityNotFoundException("No data found for courier with ID: " + courierId);
+        }
+
+        if (courierLocations.size() < 2) {
+            throw new InsufficientDataException("Not enough data for calculation. Please provide at least 2 locations for the courier to calculate distance from the start to the end. ");
         }
 
         double distance = 0.0;

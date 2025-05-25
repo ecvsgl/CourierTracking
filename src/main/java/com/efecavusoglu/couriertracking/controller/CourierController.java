@@ -24,9 +24,6 @@ public class CourierController {
      */
     @PostMapping("/location")
     public ResponseEntity<CourierLocationUpdateResponse> updateCourierLocation(@RequestBody CourierLocationUpdateRequest courierLocation) {
-        if (courierLocation.getTimestamp() == null){
-            courierLocation.setTimestamp(LocalDateTime.now());
-        }
         return courierService.processSingleLocationUpdate(courierLocation);
     }
 

@@ -157,7 +157,7 @@ public class CourierService {
 
     /**
      * Maps a CourierLocationUpdateRequest to CourierLocationEntity if the request is valid.
-     * @throws IllegalArgumentException if request is invalid.
+     * @throws IllegalArgumentException if the request is invalid.
      * @param courierLocationUpdateRequest CourierLocationUpdateRequest coming from controller
      * @return CourierLocationEntity created from incoming CourierLocationUpdateRequest.
      */

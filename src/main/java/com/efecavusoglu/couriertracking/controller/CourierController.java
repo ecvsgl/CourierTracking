@@ -1,11 +1,13 @@
 package com.efecavusoglu.couriertracking.controller;
 
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
+import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
 import com.efecavusoglu.couriertracking.service.CourierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,7 +23,10 @@ public class CourierController {
      * @return ResponseEntity to indicate request success or failure.
      */
     @PostMapping("/location")
-    public ResponseEntity<Void> updateCourierLocation(@RequestBody CourierLocationUpdateRequest courierLocation) {
+    public ResponseEntity<CourierLocationUpdateResponse> updateCourierLocation(@RequestBody CourierLocationUpdateRequest courierLocation) {
+        if (courierLocation.getTimestamp() == null){
+            courierLocation.setTimestamp(LocalDateTime.now());
+        }
         return courierService.processSingleLocationUpdate(courierLocation);
     }
 
@@ -31,7 +36,7 @@ public class CourierController {
      * @return ResponseEntity to indicate request success or failure.
      */
     @PostMapping("/locations")
-    public ResponseEntity<Void> updateCourierLocations(@RequestBody List<CourierLocationUpdateRequest> courierLocationList) {
+    public ResponseEntity<List<CourierLocationUpdateResponse>> updateCourierLocations(@RequestBody List<CourierLocationUpdateRequest> courierLocationList) {
         return courierService.processBatchLocationUpdate(courierLocationList);
     }
 

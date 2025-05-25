@@ -2,6 +2,7 @@ package com.efecavusoglu.couriertracking.service;
 
 import com.efecavusoglu.couriertracking.exception.InsufficientDataException;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
+import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
@@ -13,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,40 +44,66 @@ public class CourierService {
      * Han
      * @param courierLocationUpdateRequest
      */
-    public ResponseEntity<Void> processSingleLocationUpdate(CourierLocationUpdateRequest courierLocationUpdateRequest) {
+    public ResponseEntity<CourierLocationUpdateResponse> processSingleLocationUpdate(CourierLocationUpdateRequest courierLocationUpdateRequest) {
+        //persist location to DB
         CourierLocationEntity courierLocationEntity = courierLocationRepository.save(mapLocationUpdateRequestToLocationEntity(courierLocationUpdateRequest));
 
-        // persist to DB if locationUpdate triggered a storeEntry
-        evaluateIfStoreEntryTriggered(courierLocationEntity).ifPresent(courierStoreEntryRepository::save);
+        //create response from entity
+        CourierLocationUpdateResponse courierLocationUpdateResponse = mapLocationEntityToLocationResponse(courierLocationEntity);
 
-        return ResponseEntity.ok().build();
+        // persist to DB if locationUpdate triggered a storeEntry, and tag response storeEntryTrigger to true
+        evaluateIfStoreEntryTriggered(courierLocationEntity).ifPresent(storeEntry -> {
+            courierStoreEntryRepository.save(storeEntry);
+            courierLocationUpdateResponse.setTriggeredStoreEntry(true);
+        });
+
+        return ResponseEntity.ok(courierLocationUpdateResponse);
     }
 
-    public ResponseEntity<Void> processBatchLocationUpdate(List<CourierLocationUpdateRequest> courierLocationList) {
+    public ResponseEntity<List<CourierLocationUpdateResponse>> processBatchLocationUpdate(List<CourierLocationUpdateRequest> courierLocationList) {
         if (courierLocationList == null || courierLocationList.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one location update request.");
         }
 
-        // batch persistence for ACID compliance and performance
+        // batch persistence of locations for ACID compliance and performance
         List<CourierLocationEntity> courierLocationEntityList = courierLocationRepository.saveAll(courierLocationList.stream()
                 .map(this::mapLocationUpdateRequestToLocationEntity)
                 .toList());
 
-        courierStoreEntryRepository.saveAll(courierLocationEntityList.stream()
-                .map(this::evaluateIfStoreEntryTriggered)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList());
+        // We are ordering by courierIds first. Then by timestamp.
+        // Why? Because if the data comes in unordered with respect to timestamp, wrong location activity might be associated with storeEntry
+        courierLocationEntityList.sort(Comparator.comparing(CourierLocationEntity::getCourierId).thenComparing(CourierLocationEntity::getTimestamp));
 
-        return ResponseEntity.ok().build();
+        // iterate over locationEntity list for:
+        // 1) create corresponding response for each entity,
+        // 2) if such locationUpdateEntity triggers a storeEntry, create storeEntryEntity and add it to the persistence list, then mark response for successful storeEntry
+        List<CourierLocationUpdateResponse> responseList = new LinkedList<>();
+        List<CourierStoreEntryEntity> storeEntryList = new LinkedList<>();
+
+        for (int i = 0; i < courierLocationEntityList.size(); i++) {
+            CourierLocationEntity courierLocationEntity = courierLocationEntityList.get(i);
+            CourierLocationUpdateResponse courierLocationUpdateResponse = mapLocationEntityToLocationResponse(courierLocationEntity);
+
+            evaluateIfStoreEntryTriggered(courierLocationEntity).ifPresent(storeEntry -> {
+                storeEntryList.add(storeEntry);
+                courierLocationUpdateResponse.setTriggeredStoreEntry(true);
+            });
+
+            responseList.add(courierLocationUpdateResponse);
+        }
+
+        courierStoreEntryRepository.saveAll(storeEntryList);
+
+        return ResponseEntity.ok(responseList);
     }
 
 
     private Optional<CourierStoreEntryEntity> evaluateIfStoreEntryTriggered(CourierLocationEntity courierLocationEntity) {
         return storeService.getStores()
                 .stream()
-                .filter(store -> isCourierWithinStoreRange(store, courierLocationEntity) && !isCourierEnteredStoreBefore(store, courierLocationEntity))
-                .findAny()// because the courier can be within range of one store for 100 meters
+                .filter(store -> isCourierWithinStoreRange(store, courierLocationEntity))
+                .filter(store -> !isCourierEnteredStoreBefore(store, courierLocationEntity))
+                .findAny() // because the courier can be within range of one store for 100 meters per locationUpdate
                 .map(store -> mapLocationEntityToStoreEntryEntity(store, courierLocationEntity));
     }
 
@@ -149,6 +178,16 @@ public class CourierService {
                 .courierId(courierLocationEntity.getCourierId())
                 .store(store)
                 .timestamp(courierLocationEntity.getTimestamp())
+                .build();
+    }
+
+    private CourierLocationUpdateResponse mapLocationEntityToLocationResponse(CourierLocationEntity courierLocationEntity) {
+        return CourierLocationUpdateResponse.builder()
+                .courierId(courierLocationEntity.getCourierId())
+                .longitude(courierLocationEntity.getLongitude())
+                .latitude(courierLocationEntity.getLatitude())
+                .timestamp(courierLocationEntity.getTimestamp())
+                .isTriggeredStoreEntry(false)
                 .build();
     }
 }

@@ -29,18 +29,15 @@ public class CourierStoreEntryEntity {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(nullable = false)
-    private double distanceToStore;
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CourierStoreEntryEntity that)) return false;
-        return Double.compare(distanceToStore, that.distanceToStore) == 0 && Objects.equals(id, that.id) && Objects.equals(courierId, that.courierId) && Objects.equals(store, that.store) && Objects.equals(timestamp, that.timestamp);
+        return Objects.equals(id, that.id) && Objects.equals(courierId, that.courierId) && Objects.equals(store, that.store) && Objects.equals(timestamp, that.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, courierId, store, timestamp, distanceToStore);
+        return Objects.hash(id, courierId, store, timestamp);
     }
 
     @Override
@@ -50,7 +47,6 @@ public class CourierStoreEntryEntity {
                 ", courierId='" + courierId + '\'' +
                 ", store=" + store +
                 ", timestamp=" + timestamp +
-                ", distance=" + distanceToStore +
                 '}';
     }
 
@@ -59,7 +55,6 @@ public class CourierStoreEntryEntity {
         this.courierId = builder.courierId;
         this.store = builder.store;
         this.timestamp = builder.timestamp;
-        this.distanceToStore = builder.distanceToStore;
     }
 
     public static Builder builder() {
@@ -70,7 +65,6 @@ public class CourierStoreEntryEntity {
         private String courierId;
         private StoreEntity store;
         private LocalDateTime timestamp;
-        private double distanceToStore;
 
         public Builder() {}
 
@@ -89,11 +83,8 @@ public class CourierStoreEntryEntity {
             return this;
         }
 
-        public Builder distanceToStore(double distanceToStore) {
-            this.distanceToStore = distanceToStore;
-            return this;
+        public CourierStoreEntryEntity build() {
+            return new CourierStoreEntryEntity(this);
         }
-
-
     }
 }

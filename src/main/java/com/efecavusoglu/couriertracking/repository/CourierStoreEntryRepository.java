@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface CourierStoreEntryRepository extends JpaRepository<CourierStoreEntryEntity, Long> {
 
-    List<CourierStoreEntryEntity> findByCourierIdOrderByTimestampAsc(String courierId);
+    List<CourierStoreEntryEntity> findByCourierIdAndStoreIdOrderByTimestampDesc(String courierId, Long storeId);
 }

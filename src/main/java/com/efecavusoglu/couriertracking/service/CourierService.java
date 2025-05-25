@@ -41,6 +41,13 @@ public class CourierService {
         this.courierStoreEntryRepository = courierStoreEntryRepository;
     }
 
+    /**
+     * Process a single location update request.
+     * Converts request to a locationEntity and persists it to DB.
+     * Checks if the locationUpdate is eligible to trigger a storeEntry and persists it to DB if so.
+     * @param courierLocationUpdateRequest
+     * @return ResponseEntity<CourierLocationUpdateResponse> with the locationUpdate response.
+     */
     @Transactional
     public ResponseEntity<CourierLocationUpdateResponse> processSingleLocationUpdate(CourierLocationUpdateRequest courierLocationUpdateRequest) {
         //persist location to DB
@@ -58,6 +65,11 @@ public class CourierService {
         return ResponseEntity.ok(courierLocationUpdateResponse);
     }
 
+    /**
+     * Process a batch of location update requests.
+     * @param courierLocationList
+     * @return
+     */
     @Transactional
     public ResponseEntity<List<CourierLocationUpdateResponse>> processBatchLocationUpdate(List<CourierLocationUpdateRequest> courierLocationList) {
         if (courierLocationList == null || courierLocationList.isEmpty()) {
@@ -96,7 +108,11 @@ public class CourierService {
         return ResponseEntity.ok(responseList);
     }
 
-
+    /**
+     * Evaluate if a locationUpdate is eligible to trigger a storeEntry.
+     * @param courierLocationEntity locationUpdate entity to be evaluated.
+     * @return Optional<CourierStoreEntryEntity> if the locationUpdate is eligible to trigger a storeEntry, returns empty Optional otherwise.
+     */
     private Optional<CourierStoreEntryEntity> evaluateIfStoreEntryTriggered(CourierLocationEntity courierLocationEntity) {
         return storeService.getStores()
                 .stream()
@@ -146,6 +162,12 @@ public class CourierService {
         return calculateDistance(store.getLatitude(), store.getLongitude(), courierLocation.getLatitude(), courierLocation.getLongitude()) <= STORE_PROXIMITY_RADIUS_METERS;
     }
 
+    /***
+     * Checking if a courier has entered a store before.
+     * @param store target store
+     * @param courierLocation location of the courier
+     * @return true if the courier has entered the store before within re-entry consideration, false otherwise.
+     */
     private boolean isCourierEnteredStoreBefore(StoreEntity store, CourierLocationEntity courierLocation) {
         List<CourierStoreEntryEntity> courierStoreEntries = courierStoreEntryRepository.findByCourierIdAndStoreIdOrderByTimestampDesc(courierLocation.getCourierId(), store.getId());
         Optional<CourierStoreEntryEntity> priorEntryToStore = courierStoreEntries.stream()
@@ -172,6 +194,12 @@ public class CourierService {
                 .build();
     }
 
+    /**
+     * Maps a CourierLocationEntity to a CourierStoreEntryEntity.
+     * @param store
+     * @param courierLocationEntity
+     * @return
+     */
     private CourierStoreEntryEntity mapLocationEntityToStoreEntryEntity(StoreEntity store, CourierLocationEntity courierLocationEntity) {
         return CourierStoreEntryEntity.builder()
                 .courierId(courierLocationEntity.getCourierId())
@@ -179,7 +207,11 @@ public class CourierService {
                 .timestamp(courierLocationEntity.getTimestamp())
                 .build();
     }
-
+    /**
+     * Maps a CourierLocationEntity to a CourierLocationUpdateResponse.
+     * @param courierLocationEntity
+     * @return
+     */
     private CourierLocationUpdateResponse mapLocationEntityToLocationResponse(CourierLocationEntity courierLocationEntity) {
         return CourierLocationUpdateResponse.builder()
                 .courierId(courierLocationEntity.getCourierId())

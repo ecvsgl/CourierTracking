@@ -5,16 +5,14 @@ import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateRequest;
 import com.efecavusoglu.couriertracking.model.dto.CourierLocationUpdateResponse;
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
-import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.efecavusoglu.couriertracking.repository.CourierLocationRepository;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
+import com.efecavusoglu.couriertracking.util.MapperUtil;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,20 +23,16 @@ import static com.efecavusoglu.couriertracking.util.DistanceUtil.calculateDistan
 @Service
 public class CourierService {
 
-    @Value("${couriertracking.store_proximity_radius.meters:100}")
-    private double STORE_PROXIMITY_RADIUS_METERS;
-
-    @Value("${couriertracking.reentry_cooldown.minutes:1}")
-    private Long REENTRY_COOLDOWN_MINUTES;
-
     private final StoreService storeService;
     private final CourierLocationRepository courierLocationRepository;
     private final CourierStoreEntryRepository courierStoreEntryRepository;
+    private final StoreEntryPolicy storeEntryPolicy;
 
     public CourierService(StoreService storeService, CourierLocationRepository courierLocationRepository, CourierStoreEntryRepository courierStoreEntryRepository) {
         this.storeService = storeService;
         this.courierLocationRepository = courierLocationRepository;
         this.courierStoreEntryRepository = courierStoreEntryRepository;
+        this.storeEntryPolicy = new TimeAndLocationBasedStoreEntryPolicy();
     }
 
     /**
@@ -51,10 +45,10 @@ public class CourierService {
     @Transactional
     public ResponseEntity<CourierLocationUpdateResponse> processSingleLocationUpdate(CourierLocationUpdateRequest courierLocationUpdateRequest) {
         //persist location to DB
-        CourierLocationEntity courierLocationEntity = courierLocationRepository.save(mapLocationUpdateRequestToLocationEntity(courierLocationUpdateRequest));
+        CourierLocationEntity courierLocationEntity = courierLocationRepository.save(MapperUtil.mapLocationUpdateRequestToLocationEntity(courierLocationUpdateRequest));
 
         //create response from entity
-        CourierLocationUpdateResponse courierLocationUpdateResponse = mapLocationEntityToLocationResponse(courierLocationEntity);
+        CourierLocationUpdateResponse courierLocationUpdateResponse = MapperUtil.mapLocationEntityToLocationResponse(courierLocationEntity);
 
         // persist to DB if locationUpdate triggered a storeEntry, and tag response storeEntryTrigger to true
         evaluateIfStoreEntryTriggered(courierLocationEntity).ifPresent(storeEntry -> {
@@ -67,8 +61,8 @@ public class CourierService {
 
     /**
      * Process a batch of location update requests.
-     * @param courierLocationList
-     * @return
+     * @param courierLocationList locationUpdateRequests to be processed.
+     * @return ResponseEntity<CourierLocationUpdateResponse> ResponseEntity with a list of locationUpdate response.
      */
     @Transactional
     public ResponseEntity<List<CourierLocationUpdateResponse>> processBatchLocationUpdate(List<CourierLocationUpdateRequest> courierLocationList) {
@@ -78,7 +72,7 @@ public class CourierService {
 
         // batch persistence of locations for ACID compliance and performance
         List<CourierLocationEntity> courierLocationEntityList = courierLocationRepository.saveAll(courierLocationList.stream()
-                .map(this::mapLocationUpdateRequestToLocationEntity)
+                .map(MapperUtil::mapLocationUpdateRequestToLocationEntity)
                 .toList());
 
         // We are ordering by courierIds first. Then by timestamp.
@@ -93,7 +87,7 @@ public class CourierService {
 
         for (int i = 0; i < courierLocationEntityList.size(); i++) {
             CourierLocationEntity courierLocationEntity = courierLocationEntityList.get(i);
-            CourierLocationUpdateResponse courierLocationUpdateResponse = mapLocationEntityToLocationResponse(courierLocationEntity);
+            CourierLocationUpdateResponse courierLocationUpdateResponse = MapperUtil.mapLocationEntityToLocationResponse(courierLocationEntity);
 
             evaluateIfStoreEntryTriggered(courierLocationEntity).ifPresent(storeEntry -> {
                 storeEntryList.add(storeEntry);
@@ -116,10 +110,9 @@ public class CourierService {
     private Optional<CourierStoreEntryEntity> evaluateIfStoreEntryTriggered(CourierLocationEntity courierLocationEntity) {
         return storeService.getStores()
                 .stream()
-                .filter(store -> isCourierWithinStoreRange(store, courierLocationEntity))
-                .filter(store -> !isCourierEnteredStoreBefore(store, courierLocationEntity))
+                .filter(store -> storeEntryPolicy.canTriggerStoreEntry(store, courierLocationEntity, courierStoreEntryRepository))
                 .findAny() // because the courier can be within range of one store for 100 meters per locationUpdate
-                .map(store -> mapLocationEntityToStoreEntryEntity(store, courierLocationEntity));
+                .map(store -> MapperUtil.mapLocationEntityToStoreEntryEntity(store, courierLocationEntity));
     }
 
     /**
@@ -150,75 +143,5 @@ public class CourierService {
         }
 
         return ResponseEntity.ok(distance);
-    }
-
-    /**
-     * Checking if a courier is within range of a certain store
-     * @param store latitute of the point1
-     * @param courierLocation longitude of the point1
-     * @return whether the courier is within a store's area or not
-     */
-    private boolean isCourierWithinStoreRange(StoreEntity store, CourierLocationEntity courierLocation) {
-        return calculateDistance(store.getLatitude(), store.getLongitude(), courierLocation.getLatitude(), courierLocation.getLongitude()) <= STORE_PROXIMITY_RADIUS_METERS;
-    }
-
-    /***
-     * Checking if a courier has entered a store before.
-     * @param store target store
-     * @param courierLocation location of the courier
-     * @return true if the courier has entered the store before within re-entry consideration, false otherwise.
-     */
-    private boolean isCourierEnteredStoreBefore(StoreEntity store, CourierLocationEntity courierLocation) {
-        List<CourierStoreEntryEntity> courierStoreEntries = courierStoreEntryRepository.findByCourierIdAndStoreIdOrderByTimestampDesc(courierLocation.getCourierId(), store.getId());
-        Optional<CourierStoreEntryEntity> priorEntryToStore = courierStoreEntries.stream()
-                .filter(entry -> ChronoUnit.MINUTES.between(entry.getTimestamp(), courierLocation.getTimestamp()) <= REENTRY_COOLDOWN_MINUTES)
-                .findFirst();
-        return priorEntryToStore.isPresent();
-    }
-
-    /**
-     * Maps a CourierLocationUpdateRequest to CourierLocationEntity if the request is valid.
-     * @throws IllegalArgumentException if the request is invalid.
-     * @param courierLocationUpdateRequest CourierLocationUpdateRequest coming from controller
-     * @return CourierLocationEntity created from incoming CourierLocationUpdateRequest.
-     */
-    private CourierLocationEntity mapLocationUpdateRequestToLocationEntity(CourierLocationUpdateRequest courierLocationUpdateRequest) {
-        if (!CourierLocationUpdateRequest.isValid(courierLocationUpdateRequest)) {
-            throw new IllegalArgumentException("Invalid request. Parameters cannot be null or empty.");
-        }
-        return CourierLocationEntity.builder()
-                .courierId(courierLocationUpdateRequest.getCourierId())
-                .latitude(courierLocationUpdateRequest.getLatitude())
-                .longitude(courierLocationUpdateRequest.getLongitude())
-                .timestamp(courierLocationUpdateRequest.getTimestamp())
-                .build();
-    }
-
-    /**
-     * Maps a CourierLocationEntity to a CourierStoreEntryEntity.
-     * @param store
-     * @param courierLocationEntity
-     * @return
-     */
-    private CourierStoreEntryEntity mapLocationEntityToStoreEntryEntity(StoreEntity store, CourierLocationEntity courierLocationEntity) {
-        return CourierStoreEntryEntity.builder()
-                .courierId(courierLocationEntity.getCourierId())
-                .store(store)
-                .timestamp(courierLocationEntity.getTimestamp())
-                .build();
-    }
-    /**
-     * Maps a CourierLocationEntity to a CourierLocationUpdateResponse.
-     * @param courierLocationEntity
-     * @return
-     */
-    private CourierLocationUpdateResponse mapLocationEntityToLocationResponse(CourierLocationEntity courierLocationEntity) {
-        return CourierLocationUpdateResponse.builder()
-                .courierId(courierLocationEntity.getCourierId())
-                .longitude(courierLocationEntity.getLongitude())
-                .latitude(courierLocationEntity.getLatitude())
-                .timestamp(courierLocationEntity.getTimestamp())
-                .isTriggeredStoreEntry(false)
-                .build();
     }
 }

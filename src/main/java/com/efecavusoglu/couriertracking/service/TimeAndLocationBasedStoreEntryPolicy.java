@@ -24,6 +24,19 @@ public class TimeAndLocationBasedStoreEntryPolicy implements StoreEntryPolicy{
     @Value("${couriertracking.reentry_cooldown.minutes:1}")
     private Long REENTRY_COOLDOWN_MINUTES;
 
+    private static TimeAndLocationBasedStoreEntryPolicy instance;
+
+    private TimeAndLocationBasedStoreEntryPolicy() {
+        // singleton pattern -- prevent instantiation from outside.
+    }
+
+    public static TimeAndLocationBasedStoreEntryPolicy getInstance() {
+        if (instance == null) {
+            instance = new TimeAndLocationBasedStoreEntryPolicy();
+        }
+        return instance;
+    }
+
     @Override
     public boolean canTriggerStoreEntry(StoreEntity entity, CourierLocationEntity courierLocationEntity, CourierStoreEntryRepository courierStoreEntryRepository) {
         return isCourierWithinStoreRange(entity, courierLocationEntity) && !isCourierEnteredStoreBefore(entity, courierLocationEntity, courierStoreEntryRepository);

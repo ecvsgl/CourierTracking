@@ -32,7 +32,7 @@ public class CourierService {
         this.storeService = storeService;
         this.courierLocationRepository = courierLocationRepository;
         this.courierStoreEntryRepository = courierStoreEntryRepository;
-        this.storeEntryPolicy = new TimeAndLocationBasedStoreEntryPolicy();
+        this.storeEntryPolicy = TimeAndLocationBasedStoreEntryPolicy.getInstance();
     }
 
     /**

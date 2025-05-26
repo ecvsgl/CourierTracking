@@ -5,7 +5,7 @@ import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
 
 /*
- * Interface to define a policy for triggering store entry -- Strategy Pattern.
+ * Interface to define a policy for triggering store.
  * Enables extensibility for future.
  */
 public interface StoreEntryPolicy {

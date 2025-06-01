@@ -22,18 +22,18 @@ public class RestErrorHandler {
         return new ResponseEntity<>(template, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({InsufficientDataException.class})
+    @ExceptionHandler({InsufficientDataException.class, EntityNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<CourierAppExceptionTemplate> handleException(InsufficientDataException e) {
+    public ResponseEntity<CourierAppExceptionTemplate> handleException(Exception e) {
         CourierAppExceptionTemplate template = createExceptionTemplate(e.getMessage());
         return new ResponseEntity<>(template, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({EntityNotFoundException.class})
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<CourierAppExceptionTemplate> handleException(EntityNotFoundException e) {
+    @ExceptionHandler({PolicyNotFoundException.class})
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<CourierAppExceptionTemplate> handleException(PolicyNotFoundException e) {
         CourierAppExceptionTemplate template = createExceptionTemplate(e.getMessage());
-        return new ResponseEntity<>(template, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(template, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private CourierAppExceptionTemplate createExceptionTemplate(String message) {

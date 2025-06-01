@@ -7,6 +7,9 @@ import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.repository.CourierLocationRepository;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
+import com.efecavusoglu.couriertracking.service.storeentry.StoreEntryPolicy;
+import com.efecavusoglu.couriertracking.service.storeentry.StoreEntryPolicymaker;
+import com.efecavusoglu.couriertracking.service.storeentry.TimeAndLocationBasedStoreEntryPolicy;
 import com.efecavusoglu.couriertracking.util.MapperUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +29,16 @@ public class CourierService {
     private final StoreService storeService;
     private final CourierLocationRepository courierLocationRepository;
     private final CourierStoreEntryRepository courierStoreEntryRepository;
-    private final StoreEntryPolicy storeEntryPolicy;
+    private final StoreEntryPolicymaker storeEntryPolicymaker;
 
-    public CourierService(StoreService storeService, CourierLocationRepository courierLocationRepository, CourierStoreEntryRepository courierStoreEntryRepository) {
+    public CourierService(StoreService storeService,
+                          CourierLocationRepository courierLocationRepository,
+                          CourierStoreEntryRepository courierStoreEntryRepository,
+                          StoreEntryPolicymaker storeEntryPolicymaker) {
         this.storeService = storeService;
         this.courierLocationRepository = courierLocationRepository;
         this.courierStoreEntryRepository = courierStoreEntryRepository;
-        this.storeEntryPolicy = TimeAndLocationBasedStoreEntryPolicy.getInstance();
+        this.storeEntryPolicymaker = storeEntryPolicymaker;
     }
 
     /**
@@ -108,6 +114,7 @@ public class CourierService {
      * @return Optional<CourierStoreEntryEntity> if the locationUpdate is eligible to trigger a storeEntry, returns empty Optional otherwise.
      */
     private Optional<CourierStoreEntryEntity> evaluateIfStoreEntryTriggered(CourierLocationEntity courierLocationEntity) {
+        StoreEntryPolicy storeEntryPolicy = storeEntryPolicymaker.getStoreEntryPolicy(TimeAndLocationBasedStoreEntryPolicy.class);
         return storeService.getStores()
                 .stream()
                 .filter(store -> storeEntryPolicy.canTriggerStoreEntry(store, courierLocationEntity, courierStoreEntryRepository))

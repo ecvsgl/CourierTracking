@@ -1,10 +1,11 @@
-package com.efecavusoglu.couriertracking.service;
+package com.efecavusoglu.couriertracking.service.storeentry;
 
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.CourierStoreEntryEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
 import com.efecavusoglu.couriertracking.repository.CourierStoreEntryRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -16,26 +17,14 @@ import static com.efecavusoglu.couriertracking.util.DistanceUtil.calculateDistan
  * Store Entry Policy based on time and location criteria.
  * This policy checks if a courier has entered a store before, and if so, it checks if the re-entry cooldown period has passed.
  */
-public class TimeAndLocationBasedStoreEntryPolicy implements StoreEntryPolicy{
+@Component
+public class TimeAndLocationBasedStoreEntryPolicy implements StoreEntryPolicy {
 
     @Value("${couriertracking.store_proximity_radius.meters:100}")
     private double STORE_PROXIMITY_RADIUS_METERS;
 
     @Value("${couriertracking.reentry_cooldown.minutes:1}")
     private Long REENTRY_COOLDOWN_MINUTES;
-
-    private static TimeAndLocationBasedStoreEntryPolicy instance;
-
-    private TimeAndLocationBasedStoreEntryPolicy() {
-        // singleton pattern -- prevent instantiation from outside.
-    }
-
-    public static TimeAndLocationBasedStoreEntryPolicy getInstance() {
-        if (instance == null) {
-            instance = new TimeAndLocationBasedStoreEntryPolicy();
-        }
-        return instance;
-    }
 
     @Override
     public boolean canTriggerStoreEntry(StoreEntity entity, CourierLocationEntity courierLocationEntity, CourierStoreEntryRepository courierStoreEntryRepository) {

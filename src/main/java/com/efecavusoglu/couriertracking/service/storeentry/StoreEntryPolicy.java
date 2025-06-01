@@ -1,4 +1,4 @@
-package com.efecavusoglu.couriertracking.service;
+package com.efecavusoglu.couriertracking.service.storeentry;
 
 import com.efecavusoglu.couriertracking.model.entity.CourierLocationEntity;
 import com.efecavusoglu.couriertracking.model.entity.StoreEntity;
